@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AR Animation - Toque Finale</title>
+  
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+  <script>
+    AFRAME.registerComponent('click-manager', {
+      init: function () {
+        const sphere = document.querySelector('#trigger-sphere');
+        const hat = document.querySelector('#animated-hat');
+        const text = document.querySelector('#info-text');
+        let clicked = false;
+
+        // Gestion du chargement (Debug)
+        hat.addEventListener('model-loaded', () => {
+            console.log("✅ Modèle 3D chargé !");
+            text.setAttribute('value', 'MODELE PRET\nCLIQUEZ SUR LA SPHERE');
+            text.setAttribute('color', 'green');
+        });
+
+        hat.addEventListener('model-error', (e) => {
+            console.error("❌ Erreur modèle :", e);
+            text.setAttribute('value', 'ERREUR FICHIER 3D');
+            text.setAttribute('color', 'red');
+        });
+
+        // Gestion du clic
+        sphere.addEventListener('click', () => {
+          if (clicked) return;
+          clicked = true;
+          
+          console.log("🖱️ CLIC REÇU ! Lancement séquence...");
+
+          // 1. Cacher la sphère
+          sphere.setAttribute('visible', false);
+          sphere.classList.remove('clickable');
+
+          // 2. Afficher la toque
+          hat.setAttribute('visible', true);
+          text.setAttribute('value', '25% APPRENTIS');
+          text.setAttribute('color', '#FFA500'); // Orange
+
+          // 3. Animation 1 : Petite taille
+          // J'utilise une échelle de 0.05 car votre GLTF semble avoir des noeuds à échelle 100
+          hat.setAttribute('animation__1', {
+            property: 'scale',
+            to: '0.05 0.05 0.05', 
+            dur: 1000,
+            easing: 'easeOutQuad'
+          });
+
+          // 4. Animation 2 : Grande taille après délai
+          setTimeout(() => {
+            console.log("Passage étape 2");
+            text.setAttribute('value', '75% ETUDIANTS');
+            text.setAttribute('color', '#0000FF'); // Bleu
+            
+            hat.setAttribute('animation__2', {
+              property: 'scale',
+              to: '0.15 0.15 0.15', // 3x plus gros
+              dur: 1500,
+              easing: 'easeOutElastic'
+            });
+          }, 1500);
+        });
+      }
+    });
+  </script>
+  
+  <style> body { margin: 0; overflow: hidden; } .a-enter-vr-button { display: none; } </style>
+</head>
+
+<body>
+  <a-scene 
+    mindar-image="imageTargetSrc: targets.mind; autoStart: true; uiScanning: no;" 
+    color-space="sRGB" 
+    renderer="colorManagement: true, physicallyCorrectLights" 
+    vr-mode-ui="enabled: false" 
+    device-orientation-permission-ui="enabled: false">
+    
+    <a-assets>
+      <a-asset-item id="hat-model" src="scene.gltf"></a-asset-item>
+    </a-assets>
+
+    <a-light type="ambient" intensity="1.5"></a-light>
+    <a-light type="directional" position="2 4 5" intensity="1.5"></a-light>
+
+    <a-camera position="0 0 0" look-controls="enabled: false">
+        <a-cursor color="yellow" rayOrigin="mouse" raycaster="objects: .clickable"></a-cursor>
+    </a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0" click-manager>
+      
+      <a-text id="info-text" value="SCANNEZ L'IMAGE" position="0 0.8 0" align="center" color="yellow" scale="1.5 1.5 1.5"></a-text>
+
+      <a-sphere 
+        id="trigger-sphere" 
+        class="clickable" 
+        color="red" 
+        radius="0.4" 
+        opacity="0.8" 
+        position="0 0 0"
+        animation="property: scale; to: 1.1 1.1 1.1; dir: alternate; dur: 800; loop: true">
+      </a-sphere>
+
+      <a-entity 
+        id="animated-hat"
+        gltf-model="#hat-model" 
+        rotation="90 0 0" 
+        position="0 -0.5 0" 
+        scale="0.01 0.01 0.01" 
+        visible="false">
+      </a-entity>
+
+    </a-entity>
+  </a-scene>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SAE303 AR Experience</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
+    
+    <style>
+      body { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiLoading: no; uiError: yes;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights"  vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      <a-assets>
+        <a-asset-item id="hat-model" src="hat.glb"></a-asset-item>
+        <a-asset-item id="crowd-model" src="crowd.glb"></a-asset-item>
+      </a-assets>
+      <a-camera position="0 0 0" look-controls="enabled: false">
+        <a-entity cursor="fuse: false; rayOrigin: mouse;" raycaster="far: 10000; objects: .clickable"></a-entity>
+      </a-camera>
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-plane color="blue" opacity="0.5" position="0 0 0" height="0.552" width="1" rotation="0 0 0"></a-plane>
+        <!-- Background for text -->
+        <a-plane id="text-bg" color="#1a1a1a" opacity="0.9" position="0 0.85 -0.01" width="0.8" height="0.15" visible="false"></a-plane>
+        <a-text value="Il y a 10 ans" align="center" position="0 0.85 0" scale="0.35 0.35 0.35" color="white" visible="false" id="title-text"></a-text>
+        <!-- Number text below hat -->
+        <a-plane id="number-bg" color="#1a1a1a" opacity="0.9" position="0 -0.3 -0.01" width="0.5" height="0.12" visible="false"></a-plane>
+        <a-text value="2344" align="center" position="0 -0.3 0" scale="0.4 0.4 0.4" color="white" visible="false" id="number-text"></a-text>
+        <a-sphere class="clickable" color="#FF5722" radius="0.2" position="0 0.3 0" visible="false" id="scan-sphere"></a-sphere>
+        <a-entity id="hat-entity" gltf-model="#hat-model" position="0 0 0.1" scale="0.05 0.05 0.05" visible="false"></a-entity>
+        
+        <!-- Second sphere for status visualization -->
+        <a-sphere class="clickable" color="#4CAF50" radius="0.2" position="0.5 0.3 0" visible="false" id="status-sphere"></a-sphere>
+        <a-entity id="crowd-container" position="0 0 0.1" visible="false"></a-entity>
+      </a-entity>
+    </a-scene>
+
+    <script>
+      const sceneEl = document.querySelector('a-scene');
+      sceneEl.play();
+      
+      // Show sphere when target is found
+      const targetEl = document.querySelector('[mindar-image-target]');
+      const sphereEl = document.querySelector('#scan-sphere');
+      const hatEntity = document.querySelector('#hat-entity');
+      const titleText = document.querySelector('#title-text');
+      const textBg = document.querySelector('#text-bg');
+      const numberText = document.querySelector('#number-text');
+      const numberBg = document.querySelector('#number-bg');
+      
+      const statusSphere = document.querySelector('#status-sphere');
+      const crowdContainer = document.querySelector('#crowd-container');
+      
+      let animationRunning = false;
+      let statusAnimationRunning = false;
+      
+      targetEl.addEventListener('targetFound', () => {
+        sphereEl.setAttribute('visible', true);
+        sphereEl.setAttribute('animation', 'property: scale; from: 0 0 0; to: 1 1 1; dur: 500; easing: easeOutBack');
+        statusSphere.setAttribute('visible', true);
+        statusSphere.setAttribute('animation', 'property: scale; from: 0 0 0; to: 1 1 1; dur: 500; easing: easeOutBack');
+      });
+      
+      targetEl.addEventListener('targetLost', () => {
+        sphereEl.setAttribute('visible', false);
+        statusSphere.setAttribute('visible', false);
+        titleText.setAttribute('visible', false);
+        textBg.setAttribute('visible', false);
+        numberText.setAttribute('visible', false);
+        numberBg.setAttribute('visible', false);
+        crowdContainer.setAttribute('visible', false);
+      });
+      
+      // Click on sphere to start animation
+      sphereEl.addEventListener('click', () => {
+        if (animationRunning) return;
+        animationRunning = true;
+        
+        // Hide sphere during animation
+        sphereEl.setAttribute('visible', false);
+        
+        // Show title text with background
+        textBg.setAttribute('visible', true);
+        textBg.setAttribute('animation', 'property: opacity; from: 0; to: 0.9; dur: 500');
+        titleText.setAttribute('visible', true);
+        titleText.setAttribute('animation', 'property: opacity; from: 0; to: 1; dur: 500');
+        
+        // Show number text with background
+        numberBg.setAttribute('visible', true);
+        numberBg.setAttribute('animation', 'property: opacity; from: 0; to: 0.9; dur: 500');
+        numberText.setAttribute('visible', true);
+        numberText.setAttribute('animation', 'property: opacity; from: 0; to: 1; dur: 500');
+        
+        // Show hat and animate scale up
+        hatEntity.setAttribute('visible', true);
+        hatEntity.setAttribute('scale', '0.05 0.05 0.05');
+        
+        // Stage 1: Il y a 10 ans - scale to 0.23
+        hatEntity.setAttribute('animation', 'property: scale; to: 0.23 0.23 0.23; dur: 2000; easing: easeOutQuad');
+        
+        // After 3 seconds, Stage 2: Il y a 5 ans - scale to 0.43
+        setTimeout(() => {
+          titleText.setAttribute('value', 'Il y a 5 ans');
+          numberText.setAttribute('value', '2758');
+          hatEntity.setAttribute('animation', 'property: scale; to: 0.43 0.43 0.43; dur: 2000; easing: easeOutQuad');
+        }, 3000);
+        
+        // After 6 seconds, Stage 3: Maintenant - scale to 0.6
+        setTimeout(() => {
+          titleText.setAttribute('value', 'Maintenant');
+          numberText.setAttribute('value', '2747');
+          hatEntity.setAttribute('animation', 'property: scale; to: 0.6 0.6 0.6; dur: 2000; easing: easeOutQuad');
+        }, 6000);
+        
+        // After 10 seconds total, hide hat, title, numbers, backgrounds and show sphere again
+        setTimeout(() => {
+          hatEntity.setAttribute('visible', false);
+          titleText.setAttribute('visible', false);
+          textBg.setAttribute('visible', false);
+          numberText.setAttribute('visible', false);
+          numberBg.setAttribute('visible', false);
+          sphereEl.setAttribute('visible', true);
+          sphereEl.setAttribute('animation', 'property: scale; from: 0 0 0; to: 1 1 1; dur: 500; easing: easeOutBack');
+          animationRunning = false;
+        }, 10000);
+      });
+      
+      // Click on status sphere to show crowd visualization
+      statusSphere.addEventListener('click', () => {
+        if (statusAnimationRunning) return;
+        statusAnimationRunning = true;
+        
+        // Hide sphere during animation
+        statusSphere.setAttribute('visible', false);
+        
+        // Clear previous crowd
+        crowdContainer.innerHTML = '';
+        crowdContainer.setAttribute('visible', true);
+        
+        // Create 4 crowd models (3 normal + 1 red)
+        const positions = [
+          {x: -0.3, z: 0},
+          {x: -0.1, z: 0},
+          {x: 0.1, z: 0},
+          {x: 0.3, z: 0}
+        ];
+        
+        positions.forEach((pos, index) => {
+          setTimeout(() => {
+            const crowd = document.createElement('a-entity');
+            crowd.setAttribute('gltf-model', '#crowd-model');
+            crowd.setAttribute('position', `${pos.x} 0 ${pos.z}`);
+            crowd.setAttribute('scale', '0.1 0.1 0.1');
+            crowd.setAttribute('animation', 'property: scale; from: 0 0 0; to: 0.1 0.1 0.1; dur: 800; easing: easeOutBack');
+            
+            // Make the last one red (apprentice)
+            if (index === 3) {
+              crowd.setAttribute('material', 'color: #ff0000');
+            }
+            
+            crowdContainer.appendChild(crowd);
+          }, index * 500); // Stagger appearance by 500ms
+        });
+        
+        // After 5 seconds, hide crowd and show sphere again
+        setTimeout(() => {
+          crowdContainer.setAttribute('visible', false);
+          statusSphere.setAttribute('visible', true);
+          statusSphere.setAttribute('animation', 'property: scale; from: 0 0 0; to: 1 1 1; dur: 500; easing: easeOutBack');
+          statusAnimationRunning = false;
+        }, 5000);
+      });
+    </script>
+  </body>
+</html>
