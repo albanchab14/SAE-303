@@ -2,33 +2,29 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AR Mobile - Immersion Classe</title>
+  <title>AR Experience - FINAL ET FONCTIONNEL</title>
   
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mindar-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script> 
   
   <style> 
     body { margin: 0; background-color: black; } 
     
     #back-btn {
-        position: fixed;
-        top: 20px; left: 50%; transform: translateX(-50%);
-        padding: 12px 24px;
-        background-color: #CC0000; color: white;
-        font-family: sans-serif; font-weight: bold;
-        border: 2px solid white; border-radius: 30px;
-        z-index: 9999; display: none; cursor: pointer;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+        padding: 12px 24px; background-color: #CC0000; color: white;
+        font-family: sans-serif; font-weight: bold; border: 2px solid white;
+        border-radius: 30px; z-index: 9999; cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <div id="back-btn">RETOUR SCAN 📷</div>
+  <div id="back-btn" style="display: none;">RETOUR SCAN 📷</div>
 
   <a-scene 
-    mindar-image="imageTargetSrc: ./targets.mind; uiLoading: no; uiError: yes;" 
+    mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001;" 
     color-space="sRGB" 
     renderer="colorManagement: true, physicallyCorrectLights"  
     vr-mode-ui="enabled: false" 
@@ -38,43 +34,50 @@
       <a-asset-item id="student-model" src="3d/etudiant.glb"></a-asset-item>
       <a-asset-item id="school-model" src="3d/school.glb"></a-asset-item>
       <a-asset-item id="classroom-model" src="3d/int_school.glb"></a-asset-item>
-      <img id="graph-img" src="affiche/graphique_niveaux.png">
+      
+      <a-asset-item id="privehc-model" src="3d/school.glb"></a-asset-item>
+      <a-asset-item id="public-model" src="3d/public.glb"></a-asset-item>
+      <a-asset-item id="privesc-model" src="3d/prive_sc.glb"></a-asset-item>
+      
+      <img id="graph-levels-img" src="affiche/graphique_niveaux.png">
+      <img id="graph-status-img" src="affiche/statut_etablissements.png">
     </a-assets>
 
-    <a-light type="ambient" intensity="1.2" color="#FFF"></a-light>
-    <a-light type="point" position="0 2 0" intensity="0.8" distance="20"></a-light>
+    <a-light type="ambient" intensity="1.5"></a-light>
+    <a-light type="point" position="0 2 0" intensity="1" distance="50"></a-light>
 
-    <a-camera position="0 0 0" look-controls="enabled: true">
+    <a-camera position="0 0 0" look-controls="enabled: false">
       <a-entity cursor="fuse: false; rayOrigin: mouse;" raycaster="far: 10000; objects: .clickable"></a-entity>
     </a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0">
       
-      <a-entity id="zone-graphique" position="-0.3 -0.45 0">
+      <a-entity id="zone-graphique" position="-0.3 -0.375 0">
 
+          <a-image id="overlay-levels-btn" src="#graph-levels-img" position="0 0 0.02" scale="0.4 0.3 1" class="clickable" onclick="launchLevels()" animation="property: scale; to: 0.42 0.32 1; dir: alternate; dur: 800; loop: true"></a-image>
+          
           <a-image 
-            id="overlay-image"
-            src="#graph-img" 
-            position="0 0 0.02" 
-            scale="0.4 0.3 1" 
+            id="overlay-status-btn"
+            src="#graph-status-img" 
+            position="0.6 1.2 0.02" 
+            scale="0.4 0.4 1" 
             class="clickable"
-            opacity="1"
-            animation="property: scale; to: 0.42 0.32 1; dir: alternate; dur: 800; loop: true">
+            onclick="launchStatus()"
+            animation="property: scale; to: 0.42 0.42 1; dir: alternate; dur: 800; loop: true">
           </a-image>
 
-          <a-entity id="scene-3d-container" visible="false">
+          <a-entity id="levels-scene-container" visible="false"></a-entity>
+          
+          <a-entity id="status-scene-container" visible="false">
               
-              <a-entity 
-                  id="classroom-bg"
-                  gltf-model="#classroom-model"
-                  position="0 -3 -4" 
-                  scale="15 15 15"
-                  rotation="0 0 0">
-              </a-entity>
+              <a-text value="STATUT DES 21 ETABLISSEMENTS" position="0 1.5 0" align="center" color="white" scale="0.8 0.8 0.8"></a-text>
 
-              <a-entity id="scene-niv5" position="0 -0.8 0"></a-entity>
-              <a-entity id="scene-niv6" position="0 0 0"></a-entity>
-              <a-entity id="scene-niv7" position="0 0.8 0"></a-entity>
+              <a-entity id="status-legend" position="-1.5 0.8 0"></a-entity> 
+              
+              <a-entity id="district-private-hc" position="0 0.8 0"></a-entity>
+              <a-entity id="district-public" position="0 0 0"></a-entity>
+              <a-entity id="district-contract-sc" position="0 -0.8 0"></a-entity>
+
           </a-entity>
 
       </a-entity>
@@ -84,107 +87,198 @@
 
 
   <script>
-    // --- PARAMÈTRES ---
-    const STUDENT_SCALE = 0.08; 
-    const SCHOOL_FACTOR = 0.007; 
+    // --- PARAMÈTRES ET DONNÉES GLOBALES ---
+    const BUILDING_SCALE = 0.15; 
+    const COLS = 4;              
+    const SPACING = 0.5;         
+    const AVATAR_RATIO = 200; 
+    const SCHOOL_FACTOR_LEVEL = 0.007; 
     const SCHOOL_MIN_SIZE = 0.2; 
-    const SPACING = 0.09; 
+    const STUDENT_SCALE = 0.08;
 
-    // --- CONSTRUCTION ---
-    function buildLevel(containerID, title, formationsCount, studentsCount, color) {
-      const container = document.querySelector(containerID);
-      
-      // 1. ÉCOLE
-      let finalScale = formationsCount * SCHOOL_FACTOR;
-      if (finalScale < SCHOOL_MIN_SIZE) finalScale = SCHOOL_MIN_SIZE;
+    const STATUS_MAP = {
+        'PRIVE HC': { model: '#privehc-model', count: 10, color: '#C52A28', title: 'Prive Hors Contrat' },
+        'PUBLIC': { model: '#public-model', count: 8, color: '#7F5026', title: 'Public' },
+        'PRIVE SC': { model: '#privesc-model', count: 3, color: '#892981', title: 'Prive Sous Contrat' }
+    };
+    
+    const LEVEL_DATA = {
+        NIV5: { formations: 48, students: 1303, color: '#F5A623', title: 'BAC+2', model: '#school-model' },
+        NIV6: { formations: 37, students: 2044, color: '#4A90E2', title: 'BAC+3', model: '#school-model' },
+        NIV7: { formations: 5, students: 328, color: '#50E3C2', title: 'BAC+5', model: '#school-model' }
+    };
 
-      const school = document.createElement('a-entity');
-      school.setAttribute('gltf-model', '#school-model');
-      school.setAttribute('scale', '0 0 0'); 
-      school.setAttribute('position', '0 0 -0.2'); 
-      school.setAttribute('animation', `property: scale; from: 0 0 0; to: ${finalScale} ${finalScale} ${finalScale}; dur: 2000; easing: easeOutElastic`);
-      container.appendChild(school);
-
-      // 2. TEXTE DROITE (FORMATIONS)
-      const textForm = document.createElement('a-text');
-      textForm.setAttribute('value', `${formationsCount}\nFORMATIONS`);
-      textForm.setAttribute('align', 'left'); 
-      textForm.setAttribute('color', '#CC0000'); 
-      textForm.setAttribute('position', `0.6 0.2 0`);
-      textForm.setAttribute('scale', '0 0 0'); 
-      textForm.setAttribute('animation', 'property: scale; from: 0 0 0; to: 0.5 0.5 0.5; dur: 1000; easing: easeOutBack; delay: 1500');
-      container.appendChild(textForm);
-
-      // 3. TITRE GAUCHE (NIVEAU)
-      const titleText = document.createElement('a-text');
-      titleText.setAttribute('value', title);
-      titleText.setAttribute('align', 'right'); 
-      // Noir ou Blanc selon la couleur de tes murs de classe (ici noir par sécurité)
-      titleText.setAttribute('color', 'black'); 
-      titleText.setAttribute('position', '-0.6 0.2 0'); 
-      titleText.setAttribute('scale', '0.5 0.5 0.5');
-      container.appendChild(titleText);
-
-      // 4. ÉTUDIANTS
-      let avatarCount = Math.ceil(studentsCount / 200);
-      const cols = 6; 
-
-      for (let i = 0; i < avatarCount; i++) {
-        const student = document.createElement('a-entity');
-        student.setAttribute('gltf-model', '#student-model');
-        student.setAttribute('scale', '0 0 0');
+    // VIZ NIVEAUX
+    function buildLevelViz(containerID, title, formationsCount, studentsCount, color, modelId) {
+        const container = document.querySelector(containerID);
+        container.innerHTML = '';
         
-        const row = Math.floor(i / cols);
-        const col = i % cols;
-        const rowWidth = (Math.min(cols, avatarCount - (row * cols)) - 1) * SPACING;
-        const x = (col * SPACING) - (rowWidth / 2);
-        const z = 0.1 + (row * 0.08);
+        const finalScale = formationsCount * SCHOOL_FACTOR_LEVEL; 
+        const school = document.createElement('a-entity');
+        school.setAttribute('gltf-model', modelId); 
+        school.setAttribute('scale', '0 0 0'); 
+        school.setAttribute('position', '0 0 -0.2'); 
+        school.setAttribute('animation', `property: scale; from: 0 0 0; to: ${finalScale} ${finalScale} ${finalScale}; dur: 2000; easing: easeOutElastic`);
+        container.appendChild(school);
+        
+        const titleText = document.createElement('a-text');
+        titleText.setAttribute('value', title);
+        titleText.setAttribute('align', 'center'); 
+        titleText.setAttribute('color', 'white');
+        titleText.setAttribute('position', '0 0.5 0.5'); 
+        titleText.setAttribute('scale', '0.5 0.5 0.5');
+        container.appendChild(titleText);
+    }
+    
+    // VIZ STATUT
+    function buildStatusViz(containerID, modelID, title, count, color) {
+        const container = document.querySelector(containerID);
+        container.innerHTML = '';
 
-        student.setAttribute('position', `${x} 0 ${z}`);
-        student.setAttribute('rotation', `0 ${Math.random() * 30 - 15} 0`);
-        student.setAttribute('animation', `property: scale; from: 0 0 0; to: ${STUDENT_SCALE} ${STUDENT_SCALE} ${STUDENT_SCALE}; dur: 800; delay: ${i * 100}; easing: easeOutBack`);
+        const textTitle = document.createElement('a-text');
+        textTitle.setAttribute('value', title);
+        textTitle.setAttribute('align', 'center');
+        textTitle.setAttribute('color', 'white');
+        textTitle.setAttribute('position', '0 0.7 0'); 
+        textTitle.setAttribute('scale', '0.8 0.8 0.8'); 
+        container.appendChild(textTitle);
+        
+        for (let i = 0; i < count; i++) {
+            const el = document.createElement('a-entity');
+            el.setAttribute('gltf-model', modelID);
+            el.setAttribute('scale', '0 0 0'); 
+            
+            const row = Math.floor(i / COLS);
+            const col = i % COLS;
+            
+            const x = (col * SPACING) - (SPACING * (COLS - 1) / 2);
+            const z = row * SPACING;
 
-        container.appendChild(student);
-      }
+            el.setAttribute('position', `${x} 0.01 ${z}`);
+            el.setAttribute('rotation', `0 0 0`); 
+            
+            el.setAttribute('animation', `property: scale; from: 0 0 0; to: ${BUILDING_SCALE} ${BUILDING_SCALE} ${BUILDING_SCALE}; dur: 800; delay: ${i * 100}; easing: easeOutBack`);
+
+            container.appendChild(el);
+        }
     }
 
-    // --- INTERACTION ---
-    const imageBtn = document.querySelector('#overlay-image');
-    const sceneContainer = document.querySelector('#scene-3d-container');
+    // LÉGENDE
+    function createStatusLegend() {
+        const legendContainer = document.querySelector('#status-legend');
+        legendContainer.innerHTML = '';
+        
+        const legendData = [
+            STATUS_MAP['PRIVE HC'],  
+            STATUS_MAP['PUBLIC'],   
+            STATUS_MAP['PRIVE SC']
+        ];
+        
+        let y_offset = 0;
+
+        const titleLegend = document.createElement('a-text');
+        titleLegend.setAttribute('value', 'LEGENDE:');
+        titleLegend.setAttribute('color', 'white');
+        titleLegend.setAttribute('position', `0.1 ${y_offset + 0.3} 0`);
+        titleLegend.setAttribute('scale', '0.5 0.5 0.5'); 
+        legendContainer.appendChild(titleLegend);
+        y_offset -= 0.1;
+
+        legendData.forEach((item, index) => {
+            const colorBox = document.createElement('a-box');
+            colorBox.setAttribute('color', item.color);
+            colorBox.setAttribute('width', '0.1');
+            colorBox.setAttribute('height', '0.1'); 
+            colorBox.setAttribute('depth', '0.01');
+            colorBox.setAttribute('position', `0.1 ${y_offset} 0`);
+            legendContainer.appendChild(colorBox);
+
+            const legendText = document.createElement('a-text');
+            legendText.setAttribute('value', item.title); 
+            legendText.setAttribute('color', 'white');
+            legendText.setAttribute('position', `0.3 ${y_offset} 0`); 
+            legendText.setAttribute('scale', '0.4 0.4 0.4');
+            legendContainer.appendChild(legendText);
+            
+            y_offset -= 0.3; 
+        });
+    }
+    
+    // GESTION DES CLICS
+    
+    const levelsContainer = document.querySelector('#levels-scene-container');
+    const statusContainer = document.querySelector('#status-scene-container');
     const backBtn = document.querySelector('#back-btn');
+    const overlayLevels = document.querySelector('#overlay-levels-btn');
+    const overlayStatus = document.querySelector('#overlay-status-btn');
     
     function toggleCamera(show) {
         const video = document.querySelector('video');
         if (video) video.style.opacity = show ? '1' : '0';
     }
-
-    imageBtn.addEventListener('click', () => {
-        imageBtn.setAttribute('visible', false);
-        imageBtn.classList.remove('clickable');
-        toggleCamera(false); // Fond noir (donc on voit la classe 3D)
-
-        sceneContainer.setAttribute('visible', true);
-        backBtn.style.display = 'block';
-
-        // Lancement Animation
-        buildLevel('#scene-niv5', 'BAC+2', 48, 1303, '#F5A623'); 
-        buildLevel('#scene-niv6', 'BAC+3', 37, 2044, '#4A90E2'); 
-        buildLevel('#scene-niv7', 'BAC+5', 5, 328, '#50E3C2'); 
-    });
-
-    backBtn.addEventListener('click', () => {
-        sceneContainer.setAttribute('visible', false);
-        backBtn.style.display = 'none';
-        
+    
+    function resetScenes() {
+        levelsContainer.setAttribute('visible', false);
+        statusContainer.setAttribute('visible', false);
         document.querySelector('#scene-niv5').innerHTML = '';
         document.querySelector('#scene-niv6').innerHTML = '';
         document.querySelector('#scene-niv7').innerHTML = '';
+        document.querySelector('#district-private-hc').innerHTML = '';
+        document.querySelector('#district-public').innerHTML = '';
+        document.querySelector('#district-contract-sc').innerHTML = '';
+        document.querySelector('#status-legend').innerHTML = ''; 
+    }
 
-        imageBtn.setAttribute('visible', true);
-        imageBtn.classList.add('clickable');
+    // B. CLIC SUR BOUTON STATUT (Logique)
+    function launchStatus() {
+        resetScenes();
+        overlayLevels.setAttribute('visible', false);
+        overlayStatus.setAttribute('visible', false);
+        
+        toggleCamera(false); 
+        statusContainer.setAttribute('visible', true);
+        backBtn.style.display = 'block';
+        
+        createStatusLegend();
+        
+        buildStatusViz('#district-private-hc', STATUS_MAP['PRIVE HC'].model, STATUS_MAP['PRIVE HC'].title, STATUS_MAP['PRIVE HC'].count, STATUS_MAP['PRIVE HC'].color); 
+        buildStatusViz('#district-public', STATUS_MAP['PUBLIC'].model, STATUS_MAP['PUBLIC'].title, STATUS_MAP['PUBLIC'].count, STATUS_MAP['PUBLIC'].color);
+        buildStatusViz('#district-contract-sc', STATUS_MAP['PRIVE SC'].model, STATUS_MAP['PRIVE SC'].title, STATUS_MAP['PRIVE SC'].count, STATUS_MAP['PRIVE SC'].color);
+    }
+
+    // A. CLIC SUR BOUTON NIVEAUX (Logique)
+    function launchLevels() {
+        resetScenes();
+        overlayLevels.setAttribute('visible', false);
+        overlayStatus.setAttribute('visible', false);
+        
+        toggleCamera(false); 
+        levelsContainer.setAttribute('visible', true);
+        backBtn.style.display = 'block';
+        
+        buildLevelViz('#scene-niv5', LEVEL_DATA.NIV5.title, LEVEL_DATA.NIV5.formations, LEVEL_DATA.NIV5.students, LEVEL_DATA.NIV5.color, '#school-model');
+        buildLevelViz('#scene-niv6', LEVEL_DATA.NIV6.title, LEVEL_DATA.NIV6.formations, LEVEL_DATA.NIV6.students, LEVEL_DATA.NIV6.color, '#school-model'); 
+        buildLevelViz('#scene-niv7', LEVEL_DATA.NIV7.title, LEVEL_DATA.NIV7.formations, LEVEL_DATA.NIV7.students, LEVEL_DATA.NIV7.color, '#school-model'); 
+    }
+
+    // C. CLIC SUR RETOUR (Logique)
+    function handleBackClick() {
+        resetScenes();
+        backBtn.style.display = 'none';
+        
         toggleCamera(true);
+        overlayLevels.setAttribute('visible', true);
+        overlayLevels.classList.add('clickable');
+        overlayStatus.setAttribute('visible', true);
+        overlayStatus.classList.add('clickable');
+    }
+    
+    // 🔴 ATTACHEMENT DES LISTENERS (Final) 🔴
+    window.addEventListener('load', () => {
+        document.querySelector('#overlay-levels-btn').addEventListener('click', launchLevels);
+        document.querySelector('#overlay-status-btn').addEventListener('click', launchStatus);
+        document.querySelector('#back-btn').addEventListener('click', handleBackClick);
     });
-
   </script>
 </body>
 </html>
