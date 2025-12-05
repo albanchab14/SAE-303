@@ -51,11 +51,67 @@
         pointer-events: auto;
         display: inline-block;
         padding: 10px 25px; background-color: #C68F00; color: white;
-        font-weight: bold; border: 2px solid white; border-radius: 30px; 
+        font-weight: bold, border: 2px solid white; border-radius: 30px; 
         cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.5);
     }
     .mode-apprenti-style {
         background-color: #FF8A65 !important; color: black !important;
+    }
+
+    /* --- INTRO SCREEN --- */
+    #intro-screen {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        pointer-events: auto;
+        backdrop-filter: blur(8px);
+    }
+
+    .intro-content {
+        background: rgba(20, 20, 20, 0.95);
+        border: 3px solid #C68F00;
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 600px;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(198, 143, 0, 0.3);
+    }
+
+    .intro-content h1 {
+        font-size: 2.5em;
+        color: #C68F00;
+        margin: 0 0 20px 0;
+        font-weight: bold;
+    }
+
+    .intro-content p {
+        font-size: 1.1em;
+        color: #ddd;
+        line-height: 1.6;
+        margin: 0 0 30px 0;
+    }
+
+    #intro-btn {
+        padding: 15px 40px;
+        background-color: #C68F00;
+        color: white;
+        font-weight: bold;
+        font-size: 1.1em;
+        border: 2px solid white;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    #intro-btn:hover {
+        background-color: #FF8A65;
+        transform: scale(1.05);
     }
 
   </style>
@@ -123,6 +179,14 @@
   </script>
 </head>
 <body>
+
+  <div id="intro-screen">
+      <div class="intro-content">
+          <h1>🎓 L'enseignement supérieur à Béziers</h1>
+          <p>Explorez l'évolution de la population étudiante et les établissements de formation supérieure. Scannez la cible AR pour découvrir nos données interactives en réalité augmentée.</p>
+          <button id="intro-btn" onclick="startARExperience()">Accéder à l'affiche 📱</button>
+      </div>
+  </div>
 
   <div id="back-btn">RETOUR SCAN 📷</div>
   <div id="switch-btn-top6" onclick="toggleTop6Mode()">VOIR APPRENTIS 🔄</div>
@@ -545,22 +609,27 @@
             const box = document.createElement('a-box');
             box.setAttribute('color', item.color);
             box.setAttribute('scale', '0.1 0.1 0.01');
-            box.setAttribute('position', `0.1 ${y} 0`);
+            box.setAttribute('position', `-0.3 ${y} 0`);
             legendContainer.appendChild(box);
             const txt = document.createElement('a-text');
             txt.setAttribute('value', item.title);
             txt.setAttribute('color', 'white');
-            txt.setAttribute('scale', '0.4 0.4 0.4');
-            txt.setAttribute('position', `0.3 ${y} 0`);
+            txt.setAttribute('scale', '0.35 0.35 0.35');
+            txt.setAttribute('position', `0.1 ${y} 0`);
             legendContainer.appendChild(txt);
             y -= 0.2;
         });
     }
 
+    window.startARExperience = function() {
+        document.querySelector('#intro-screen').style.display = 'none';
+        showMainMenu();
+    };
+
     window.addEventListener('load', () => {
         document.querySelector('#back-btn').addEventListener('click', handleBackClick);
+        // L'intro s'affiche automatiquement
     });
-
   </script>
 </body>
 </html>
