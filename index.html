@@ -127,7 +127,7 @@
       init: function() {
         const data = this.data;
         const el = this.el;
-        el.innerHTML = ''; // Clean
+        el.innerHTML = '';
 
         // Bâtiment
         const building = document.createElement('a-box');
@@ -152,14 +152,12 @@
         for(let f=0; f<floors; f++) {
             const yPos = (f * 0.4) + 0.2;
             if(yPos > data.height - 0.1) break;
-            // Fenêtre G
             const w1 = document.createElement('a-plane');
             w1.setAttribute('color', winColor);
             w1.setAttribute('width', winW);
             w1.setAttribute('height', winH);
             w1.setAttribute('position', `-${data.width*0.25} ${yPos} ${depthOffset}`);
             el.appendChild(w1);
-            // Fenêtre D
             const w2 = document.createElement('a-plane');
             w2.setAttribute('color', winColor);
             w2.setAttribute('width', winW);
@@ -168,7 +166,6 @@
             el.appendChild(w2);
         }
       },
-      // Animation respiration pour le Top 6
       tick: function (time, timeDelta) {
         let t = (time / 1000 * 2.0) + this.data.offset; 
         let scaleFactor = 0.98 + (Math.sin(t) + 1) * (1.0 - 0.98) / 2;
@@ -214,11 +211,19 @@
       <a-asset-item id="privehc-model" src="3d/school.glb"></a-asset-item>
       <a-asset-item id="public-model" src="3d/public.glb"></a-asset-item>
       <a-asset-item id="privesc-model" src="3d/prive_sc.glb"></a-asset-item>
+
+      <!-- Model pour les chapeaux (filières) -->
+      <a-asset-item id="hat-model" src="3d/hat.glb"></a-asset-item>
       
+      <!-- Images pour les boutons -->
       <img id="graph-levels-img" src="affiche/graphique_niveaux.png">
       <img id="graph-status-img" src="affiche/statut_etablissements.png">
       <img id="graph-top6-img" src="affiche/6-etablissements.png">
       <img id="graph-evolution-img" src="affiche/etudiants-statut.png"> 
+      <img id="graph-diplomes-img" src="affiche/type-diplomes.png">
+      
+      <!-- Image de fond pour les animations -->
+      <img id="bg-animation" src="affiche/fond-1.png">
     </a-assets>
 
     <a-light type="ambient" intensity="1.0"></a-light>
@@ -236,6 +241,8 @@
           <a-image id="overlay-status-btn" src="#graph-status-img" position="0.6 0.97 0.02" scale="0.4 0.48 1" class="clickable" onclick="launchStatus()"></a-image>
           <a-image id="overlay-top6-btn" src="#graph-top6-img" position="0.3 -0.45 0.02" scale="1 0.5 1" class="clickable" onclick="launchTop6()"></a-image>
           <a-image id="overlay-evolution-btn" src="#graph-evolution-img" position="0.3 0.43 0.02" scale="0.95 0.4 1" class="clickable" onclick="launchEvolution()"></a-image>
+          <!-- Bouton pour les diplômes / filières -->
+          <a-image id="overlay-diplomes-btn" src="#graph-diplomes-img" position="0.6 0 0.02" scale="0.4 0.38 1" class="clickable" onclick="launchDiplomes()"></a-image>
 
           <a-entity id="levels-scene-container" visible="false">
              <a-entity id="scene-niv5" position="0 -0.8 0"></a-entity>
@@ -251,6 +258,9 @@
              <a-entity id="district-contract-sc" position="0 -0.8 0"></a-entity>
           </a-entity>
 
+          <!-- Conteneur pour la visualisation des filières (chapeaux) -->
+          <a-entity id="filieres-scene-container" visible="false" position="0 -0.25 0"></a-entity>
+          
           <a-entity id="top6-scene-container" visible="false">
               <a-text id="top6-title" value="TOP 6 ETUDIANTS" position="0 1.0 0" align="center" color="white" scale="0.7 0.7 0.7"></a-text>
               <a-entity id="top6-buildings" position="0 0 0"></a-entity>
@@ -300,7 +310,6 @@
         NIV7: { formations: 5, students: 328, color: '#50E3C2', title: 'BAC+5', model: '#school-model' }
     };
 
-    // Paramètres graphiques
     const STUDENT_SCALE = 0.08; 
     const SCHOOL_FACTOR_LEVEL = 0.007; 
     const SCHOOL_MIN_SIZE = 0.2; 
@@ -327,7 +336,6 @@
         document.querySelector('#top6-scene-container').setAttribute('visible', false);
         document.querySelector('#evolution-scene-container').setAttribute('visible', false);
         
-        // Clean content
         document.querySelector('#scene-niv5').innerHTML = '';
         document.querySelector('#scene-niv6').innerHTML = '';
         document.querySelector('#scene-niv7').innerHTML = '';
@@ -337,16 +345,22 @@
         document.querySelector('#status-legend').innerHTML = '';
         document.querySelector('#top6-buildings').innerHTML = '';
         document.querySelector('#evolution-crowd-anchor').innerHTML = '';
+        const filieresParent = document.querySelector('#filieres-scene-container');
+        if (filieresParent) {
+            filieresParent.innerHTML = '';
+            filieresParent.setAttribute('visible', false);
+        }
+        const filieresBg = document.querySelector('#filieres-bg');
+        if (filieresBg && filieresBg.parentNode) filieresBg.parentNode.removeChild(filieresBg);
         
-        // Hide UI
         document.querySelector('#switch-btn-top6').style.display = 'none';
         document.querySelector('#evolution-ui').style.display = 'none';
         
-        // Hide Menu
         document.querySelector('#overlay-levels-btn').setAttribute('visible', false);
         document.querySelector('#overlay-status-btn').setAttribute('visible', false);
         document.querySelector('#overlay-top6-btn').setAttribute('visible', false);
         document.querySelector('#overlay-evolution-btn').setAttribute('visible', false);
+        document.querySelector('#overlay-diplomes-btn').setAttribute('visible', false);
         
         toggleCamera(false);
     }
@@ -358,6 +372,7 @@
         document.querySelector('#overlay-status-btn').setAttribute('visible', true);
         document.querySelector('#overlay-top6-btn').setAttribute('visible', true);
         document.querySelector('#overlay-evolution-btn').setAttribute('visible', true);
+        document.querySelector('#overlay-diplomes-btn').setAttribute('visible', true);
     }
 
     // ================= LOGIQUE EVOLUTION (FOULE) =================
@@ -408,7 +423,13 @@
 
         // FOULE
         const anchor = document.querySelector('#evolution-crowd-anchor');
-        anchor.innerHTML = ''; 
+        anchor.innerHTML = '';
+        
+        const sceneContainer = document.querySelector('#evolution-scene-container');
+        let existingBg = sceneContainer.querySelector('#evolution-bg');
+        if (!existingBg) {
+            addAnimationBackgroundWithId(sceneContainer, 'evolution-bg');
+        }
 
         const MODEL_RATIO = 50; 
         let numModels = Math.ceil(count / MODEL_RATIO);
@@ -483,6 +504,8 @@
         const titleText = document.querySelector('#top6-title');
         container.innerHTML = ''; 
 
+        addAnimationBackground(container);
+
         let currentColor = isApprentiModeTop6 ? COLORS.APPRENTI : COLORS.STUDENT;
         
         if (isApprentiModeTop6) {
@@ -546,14 +569,28 @@
     };
 
     window.handleBackClick = function() {
-        resetScenes();
-        showMainMenu();
+        const parent = document.querySelector('#filieres-scene-container');
+        const bg = document.querySelector('#filieres-bg');
+        if (bg) {
+            bg.setAttribute('animation__out', 'property: material.opacity; to: 0; dur: 250; easing: easeOutQuad');
+            if (parent) parent.innerHTML = '';
+            setTimeout(() => {
+                if (bg.parentNode) bg.parentNode.removeChild(bg);
+                resetScenes();
+                showMainMenu();
+            }, 300);
+        } else {
+            resetScenes();
+            showMainMenu();
+        }
     };
 
-    // --- Helpers ---
     function buildLevelViz(containerID, title, formationsCount, studentsCount, color, modelId) {
         const container = document.querySelector(containerID);
         container.innerHTML = '';
+        
+        addAnimationBackground(container);
+        
         let finalScale = Math.max(formationsCount * SCHOOL_FACTOR_LEVEL, SCHOOL_MIN_SIZE);
         const school = document.createElement('a-entity');
         school.setAttribute('gltf-model', modelId); 
@@ -584,9 +621,13 @@
             container.appendChild(student);
         }
     }
+    
     function buildStatusViz(containerID, modelID, title, count, color) {
         const container = document.querySelector(containerID);
         container.innerHTML = '';
+        
+        addAnimationBackground(container);
+        
         for (let i = 0; i < count; i++) {
             const el = document.createElement('a-entity');
             el.setAttribute('gltf-model', modelID);
@@ -600,6 +641,7 @@
             container.appendChild(el);
         }
     }
+    
     function createStatusLegend() {
         const legendContainer = document.querySelector('#status-legend');
         legendContainer.innerHTML = '';
@@ -620,6 +662,93 @@
             y -= 0.2;
         });
     }
+    
+    // ================= FONCTION BACKGROUND POUR ANIMATIONS =================
+    function addAnimationBackground(container) {
+        const bg = document.createElement('a-plane');
+        bg.setAttribute('id', 'anim-bg-' + Math.random());
+        bg.setAttribute('width', '2.5');
+        bg.setAttribute('height', '2.5');
+        bg.setAttribute('position', '0 0 -0.5');
+        bg.setAttribute('material', 'color: #000000; opacity: 0.7; transparent: true');
+        container.appendChild(bg);
+    }
+
+    function addAnimationBackgroundWithId(container, id) {
+        const bg = document.createElement('a-plane');
+        bg.setAttribute('id', id);
+        bg.setAttribute('width', '2.5');
+        bg.setAttribute('height', '2.5');
+        bg.setAttribute('position', '0 0 -0.5');
+        bg.setAttribute('material', 'color: #000000; opacity: 0.7; transparent: true');
+        container.appendChild(bg);
+    }
+    
+    // ================= VISUALISATION FILIERES (CHAPEAUX) =================
+    function buildFiliereGraph() {
+        const FILIERES = [
+            { name: "Médical, sanitaire et social", count: 1156 },
+            { name: "Commerce, communication", count: 940 },
+            { name: "Numérique", count: 484 },
+            { name: "Lettres, langues, SHS", count: 450 },
+            { name: "Industrie, artisanat", count: 295 },
+            { name: "Gestion, comptabilité", count: 248 },
+            { name: "Tourisme, hôtellerie", count: 76 },
+            { name: "Arts plastiques", count: 17 },
+            { name: "Logistique", count: 9 }
+        ];
+
+        const parent = document.querySelector('#filieres-scene-container');
+        if (!parent) return;
+        parent.innerHTML = '';
+
+        const maxVal = Math.max(...FILIERES.map(f => f.count)) || 1;
+        const spacing = 0.75;
+        const n = FILIERES.length;
+        const startX = -((n - 1) * spacing) / 2;
+
+        // Ajouter le fond
+        addAnimationBackground(parent);
+
+        FILIERES.forEach((f, i) => {
+            const x = startX + i * spacing;
+
+            const hat = document.createElement('a-entity');
+            hat.setAttribute('gltf-model', '#hat-model');
+
+            const rawScale = (f.count / maxVal);
+            const SCALE_FACTOR = 0.5;
+            let scaleVal = rawScale * SCALE_FACTOR;
+            const minScale = 0.06;
+            const maxScale = 0.55;
+            scaleVal = Math.min(Math.max(scaleVal, minScale), maxScale);
+
+            hat.setAttribute('scale', `0 0 0`);
+            hat.setAttribute('position', `${x} 0.08 0.02`);
+            hat.setAttribute('rotation', `0 ${Math.random() * 30 - 15} 0`);
+            const hatDelay = 200 + i * 90;
+            hat.setAttribute('animation', `property: scale; to: ${scaleVal} ${scaleVal} ${scaleVal}; dur: 1500; easing: easeOutElastic; delay: ${hatDelay}`);
+            parent.appendChild(hat);
+
+            const shortName = (f.name.length > 20) ? f.name.slice(0, 20) + '…' : f.name;
+            const txt = document.createElement('a-text');
+            txt.setAttribute('value', `${shortName}\n${f.count}`);
+            txt.setAttribute('align', 'center');
+            txt.setAttribute('color', 'white');
+            txt.setAttribute('scale', '0.24 0.24 0.24');
+            txt.setAttribute('position', `${x} -0.35 0.02`);
+            parent.appendChild(txt);
+        });
+    }
+
+    window.launchDiplomes = function() {
+        resetScenes();
+        document.querySelector('#back-btn').style.display = 'block';
+        const parent = document.querySelector('#filieres-scene-container');
+        parent.setAttribute('visible', true);
+        toggleCamera(false);
+        buildFiliereGraph();
+    };
 
     window.startARExperience = function() {
         document.querySelector('#intro-screen').style.display = 'none';
